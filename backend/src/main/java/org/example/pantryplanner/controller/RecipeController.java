@@ -1,6 +1,6 @@
 package org.example.pantryplanner.controller;
 
-import org.example.pantryplanner.dto.RecipeDTO;
+import org.example.pantryplanner.olddto.RecipeDTO;
 import org.example.pantryplanner.service.RecipeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,7 +35,9 @@ public class RecipeController {
     }
 
     @GetMapping("/search/{jd}")
-    public 
+    public ResponseEntity<RecipeDTO> searchRecipeById(@PathVariable Long id) {
+        RecipeDTO response = recipeService.getRecipeById(id);
+    }
 }
 
 

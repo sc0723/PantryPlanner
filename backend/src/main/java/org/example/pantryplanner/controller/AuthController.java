@@ -1,6 +1,6 @@
 package org.example.pantryplanner.controller;
 
-import org.example.pantryplanner.dto.LoginRequestDTO;
+import org.example.pantryplanner.olddto.LoginRequestDTO;
 import org.example.pantryplanner.model.User;
 import org.example.pantryplanner.service.AuthService;
 import org.springframework.web.bind.annotation.*;

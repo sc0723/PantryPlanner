@@ -1,8 +1,8 @@
 package org.example.pantryplanner.service;
 
-import org.example.pantryplanner.dto.EdamamResponseDTO;
-import org.example.pantryplanner.dto.HitDTO;
-import org.example.pantryplanner.dto.RecipeDTO;
+import org.example.pantryplanner.olddto.EdamamResponseDTO;
+import org.example.pantryplanner.olddto.HitDTO;
+import org.example.pantryplanner.olddto.RecipeDTO;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -76,8 +76,7 @@ public class RecipeService {
     }
 
 
+    public RecipeDTO getRecipeById(Long id) {
 
-
-
-
+    }
 }

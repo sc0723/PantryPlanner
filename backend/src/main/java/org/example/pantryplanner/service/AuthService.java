@@ -1,7 +1,6 @@
 package org.example.pantryplanner.service;
 
-import org.example.pantryplanner.dto.LoginRequestDTO;
-import org.example.pantryplanner.filter.JwtAuthFilter;
+import org.example.pantryplanner.olddto.LoginRequestDTO;
 import org.example.pantryplanner.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;

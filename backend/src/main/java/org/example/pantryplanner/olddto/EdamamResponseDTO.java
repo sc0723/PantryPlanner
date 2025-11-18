@@ -1,7 +1,6 @@
-package org.example.pantryplanner.dto;
+package org.example.pantryplanner.olddto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.Data;
 
 import java.util.List;
 
