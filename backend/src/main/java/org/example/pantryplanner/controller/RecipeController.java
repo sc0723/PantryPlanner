@@ -33,6 +33,9 @@ public class RecipeController {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/search/{jd}")
+    public 
 }
 
 

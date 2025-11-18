@@ -7,25 +7,25 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import org.example.pantryplanner.service.JwtService;
 import org.example.pantryplanner.service.UserInfoDetailsService;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserInfoDetailsService userInfoDetailsService;
+    private final HandlerExceptionResolver handlerExceptionResolver;
 
-    public JwtAuthFilter(JwtService jwtService, UserInfoDetailsService userInfoDetailsService) {
+    public JwtAuthFilter(JwtService jwtService, UserInfoDetailsService userInfoDetailsService, HandlerExceptionResolver handlerExceptionResolver) {
         this.jwtService = jwtService;
         this.userInfoDetailsService = userInfoDetailsService;
+        this.handlerExceptionResolver = handlerExceptionResolver;
     }
 
     @Override
@@ -40,7 +40,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         try {
             jwt = authHeader.substring(7);
             username = jwtService.getUsername(jwt);
@@ -58,15 +57,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             }
 
             filterChain.doFilter(request, response);
-        } catch (Exception e) {
-            logger.warn("Error processing JWT token: " + e.getMessage());
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-            Map<String, String> errorDetails = new HashMap<>();
-            errorDetails.put("error", "Invalid or expired JWT token");
-            errorDetails.put("message", e.getMessage());
-            response.getWriter().write("Invalid or expired JWT token.");
+        } catch (Exception e) {
+            response.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+            response.setHeader("Access-Control-Allow-Credentials", "true");
+            logger.warn("Exception in processing JWT Token: " + e.getMessage());
+            handlerExceptionResolver.resolveException(request, response, null, e);
         }
+
     }
 }
