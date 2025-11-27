@@ -2,8 +2,7 @@ package org.example.pantryplanner.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
-public record GroceryItemDTO(String name,
-                             double amount,
-                             String unit) {
+public record SpoonacularResponseDTO(List<RecipePreviewDTO> hits) {
 }

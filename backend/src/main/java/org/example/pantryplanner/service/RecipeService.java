@@ -1,11 +1,15 @@
 package org.example.pantryplanner.service;
 
+import org.example.pantryplanner.dto.ComplexSearchDTO;
+import org.example.pantryplanner.dto.RecipePreviewDTO;
+import org.example.pantryplanner.dto.SpoonacularResponseDTO;
 import org.example.pantryplanner.olddto.EdamamResponseDTO;
 import org.example.pantryplanner.olddto.HitDTO;
 import org.example.pantryplanner.olddto.RecipeDTO;
 import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -13,13 +17,13 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@RestController
+@Service
 @Slf4j
 public class RecipeService {
-    @Value("${edamam.api.id}")
-    private String apiId;
+//    @Value("${edamam.api.id}")
+//    private String apiId;
 
-    @Value("${edamam.api.key}")
+    @Value("${spoonacular.api.key}")
     private String apiKey;
 
     private final RestTemplate restTemplate;
@@ -28,23 +32,23 @@ public class RecipeService {
         this.restTemplate = restTemplate;
     }
 
-    public List<RecipeDTO> searchRecipes(String query, List<String> health, String mealType, String calories, String time) {
-        String baseUrl = "https://api.edamam.com/api/recipes/v2";
+    public ComplexSearchDTO searchRecipes(String query, String calories, String time) {
+        String baseUrl = "https://api.spoonacular.com/recipes/complexSearch";
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .queryParam("type", "public")
-                .queryParam("q", query)
-                .queryParam("app_id", apiId)
-                .queryParam("app_key", apiKey);
-
-        if (health != null && !health.isEmpty()) {
-            builder.queryParam("health", health);
-        }
-        if (mealType != null && !mealType.isEmpty()) {
-            builder.queryParam("mealType", mealType);
-        }
+//                .queryParam("type", "public")
+                .queryParam("query", query)
+                .queryParam("addRecipeInformation", true)
+                .queryParam("number", 5)
+                .queryParam("apiKey", apiKey);
+//        if (health != null && !health.isEmpty()) {
+//            builder.queryParam("health", health);
+//        }
+//        if (mealType != null && !mealType.isEmpty()) {
+//            builder.queryParam("mealType", mealType);
+//        }
         if (calories != null && !calories.isEmpty()) {
-            builder.queryParam("calories", calories);
+            builder.queryParam("maxCalories", calories);
         }
         if (time != null && !time.isEmpty()) {
             builder.queryParam("time", time);
@@ -55,28 +59,28 @@ public class RecipeService {
         log.info("Requesting URL: {}", url);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set("Edamam-Account-User", "pantry-planner-user-01"); // Hardcoded user for now
+        headers.set("Spoonacular-User", "pantry-planner-user-01"); // Hardcoded user for now
         HttpEntity<String> entity = new HttpEntity<>(headers);
 
         try {
-            ResponseEntity<EdamamResponseDTO> response = restTemplate.exchange(
+            ResponseEntity<ComplexSearchDTO> response = restTemplate.exchange(
                     url,
                     HttpMethod.GET,
                     entity,
-                    EdamamResponseDTO.class
+                    ComplexSearchDTO.class
             );
 
 //            log.info("API Response: {}", response.getBody());
-            return response.getBody().hits().stream().map(HitDTO::recipe).collect(Collectors.toList());
+            return response.getBody();
 
         } catch (Exception e) {
-            log.error("Error calling Edamam API: {}", e.getMessage());
+            log.error("Error calling Spoonacular API: {}", e.getMessage());
             return null;
         }
     }
 
-
-    public RecipeDTO getRecipeById(Long id) {
-
-    }
+//
+//    public RecipeDTO getRecipeById(Long id) {
+//
+//    }
 }

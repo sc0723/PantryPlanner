@@ -16,6 +16,7 @@ function AuthForm() {
             const token: string = await loginUser(username, password);
             
             useAuthStore.getState().login(token);
+            console.log("Store after login:", useAuthStore.getState());
         } catch (error) {
             setError("Login failed. Please check your credentials.")
         };
@@ -28,7 +29,7 @@ function AuthForm() {
             
             useAuthStore.getState().login(token);
         } catch (error) {
-            setError("Registration failed. Username mgiht be taken.")
+            setError("Registration failed. Username might be taken.")
         };
     };
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import api from "../services/api"
-import type { Recipe } from '../types/recipe';
+import type { ComplexSearchResponse, Recipe } from '../types/recipe';
 import {
     TextField, Button, Box, Typography, Select, FormControl,
     FormGroup, Checkbox, InputLabel, MenuItem, FormControlLabel,
@@ -43,23 +43,22 @@ function RecipeSearch() {
 
         setError(null);
         try {
-            const response = await api.get<Recipe[]>(
+            const response = await api.get<ComplexSearchResponse>(
                 '/api/v1/recipes/search',
                 {
                     params: {
-                        q: searchTerm,
-                        mealType: mealType || undefined,
-                        health: health,
+                        query: searchTerm,
                         calories: calories || undefined,
                         time: time || undefined
                     }
                 }
             );
 
-            setRecipes(response.data);
-            if (response.data.length === 0) {
+            setRecipes(response.data.results);
+            if (response.data.results.length === 0) {
                 setError("No recipes found. Try different filters!");
             }
+            const recipeArray = response.data.results;
             console.log(response.data);
         } catch (err) {
             console.error("Error fetching recipes:", err);
@@ -167,17 +166,17 @@ function RecipeSearch() {
 
             <Box component="ul" sx={{ listStyleType: 'none', paddingLeft: 0, marginTop: 3 }}>
                 {!isLoading && recipes.map((recipe) => (
-                    <Box component="li" key={recipe.label} sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, borderBottom: '1px solid #eee', paddingBottom: 2 }}>
+                    <Box component="li" key={recipe.id} sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, borderBottom: '1px solid #eee', paddingBottom: 2 }}>
                         <img
-                            src={recipe.images?.SMALL?.url}
-                            alt={recipe.label}
+                            src={recipe.image}
+                            alt={recipe.title}
                             width={100}
                             height={100}
                             style={{ borderRadius: '8px', marginRight: '15px' }}
                         />
                         <Box>
-                            <Typography variant="h6">{recipe.label}</Typography>
-                            <Typography variant="body2" color="textSecondary">{Math.round(recipe.calories)} cals | {recipe.totalTime > 0 ? `${recipe.totalTime} min` : 'Quick'}</Typography>
+                            <Typography variant="h6">{recipe.title}</Typography>
+                            <Typography variant="body2" color="textSecondary">{recipe.readyInMinutes} mins | Servings: {recipe.servings} | Score: {Math.round(recipe.healthScore)}</Typography>
                         </Box>
                     </Box>
                 ))}

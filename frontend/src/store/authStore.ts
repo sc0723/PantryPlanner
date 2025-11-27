@@ -40,7 +40,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         (set) => ({
             token: null,
             user: null,
-
+            
             login: (token) => {
                 const decoded = decodeToken(token);
                 const username = decoded?.sub || null; 
