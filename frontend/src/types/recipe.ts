@@ -1,29 +1,3 @@
-// interface ImageInfo {
-//     url: string;
-//     width: number;
-//     height: number;
-// }   
-
-// interface NutrientInfo {
-//     label: string;
-//     quantity: number;
-//     unit: string;
-// }
-
-// interface Image {
-//     REGULAR: ImageInfo;
-//     SMALL: ImageInfo;  
-//     THUMBNAIL: ImageInfo;
-// }
-
-// interface TotalNutrients {
-//     calories: NutrientInfo;
-//     protein: NutrientInfo;
-//     fat: NutrientInfo;
-//     carbs: NutrientInfo;
-//     sugar: NutrientInfo;
-// }
-
 export interface Recipe {
     id: number;
     title: string;
@@ -32,6 +6,48 @@ export interface Recipe {
     readyInMinutes: number;
     healthScore: number;
     servings: number;
+}
+
+export interface Ingredient {
+    id: number;
+    name: string;
+    amount: number;
+    unit: string;
+}
+
+export interface InstructionStep {
+    number: number;
+    step: string;
+}
+
+export interface AnalyzedInstruction {
+    name: string;
+    steps: InstructionStep[];
+}
+
+export interface Nutrient {
+    name: string;
+    amount: number;
+    unit: string;
+}
+
+export interface NutrientWrapper {
+    nutrients: Nutrient[];
+}
+
+export interface RecipeDetail {
+    id: number;
+    title: string;
+    image: string;
+    readyInMinutes: number;
+    servings: number;
+    preparationMinutes: number;
+    cookingMinutes: number;
+    summary: string;
+    sourceUrl: string;
+    extendedIngredients: Ingredient[];
+    analyzedInstructions: AnalyzedInstruction[];
+    nutrition: NutrientWrapper[];
 }
 
 export interface ComplexSearchResponse {

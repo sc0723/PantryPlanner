@@ -1,15 +1,11 @@
 package org.example.pantryplanner.controller;
 
 import org.example.pantryplanner.dto.ComplexSearchDTO;
-import org.example.pantryplanner.dto.RecipePreviewDTO;
-import org.example.pantryplanner.olddto.RecipeDTO;
+import org.example.pantryplanner.dto.RecipeDetailDTO;
 import org.example.pantryplanner.service.RecipeService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-
 
 @RestController
 @RequestMapping("/api/v1/recipes")
@@ -22,11 +18,11 @@ public class RecipeController {
 
     @GetMapping("/search")
     public ResponseEntity<ComplexSearchDTO> searchRecipes(@RequestParam String query,
-                                                                @RequestParam(required=false) List<String> health,
+                                                                @RequestParam(required = false) String[] health,
                                                                 @RequestParam(required = false) String mealType,
                                                                 @RequestParam(required = false) String calories,
                                                                 @RequestParam(required = false) String time) {
-        ComplexSearchDTO response = recipeService.searchRecipes(query, calories, time);
+        ComplexSearchDTO response = recipeService.searchRecipes(query, health, mealType, calories, time);
 
         if (response != null) {
             return ResponseEntity.ok(response);
@@ -35,10 +31,15 @@ public class RecipeController {
         }
     }
 
-//    @GetMapping("/search/{jd}")
-//    public ResponseEntity<RecipeDTO> searchRecipeById(@PathVariable Long id) {
-////        RecipeDTO response = recipeService.getRecipeById(id);
-//    }
+    @GetMapping("/{id}")
+    public ResponseEntity<RecipeDetailDTO> searchRecipeById(@PathVariable Integer id) {
+        RecipeDetailDTO response = recipeService.getRecipeById(id);
+        if (response != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 }
 
 

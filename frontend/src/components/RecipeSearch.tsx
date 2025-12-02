@@ -48,6 +48,8 @@ function RecipeSearch() {
                 {
                     params: {
                         query: searchTerm,
+                        health: health || undefined,
+                        mealType: mealType || undefined,
                         calories: calories || undefined,
                         time: time || undefined
                     }
@@ -116,16 +118,17 @@ function RecipeSearch() {
                         onChange={(e) => setMealType(e.target.value)}
                     >
                         <MenuItem value="">Any</MenuItem>
-                        <MenuItem value="Breakfast">Breakfast</MenuItem>
-                        <MenuItem value="Lunch">Lunch</MenuItem>
-                        <MenuItem value="Dinner">Dinner</MenuItem>
-                        <MenuItem value="Snack">Snack</MenuItem>
-                        <MenuItem value="Teatime">Tea time</MenuItem>
+                        <MenuItem value="breakfast">Breakfast</MenuItem>
+                        <MenuItem value="main course">Lunch/Dinner</MenuItem>
+                        <MenuItem value="appetizer">Appetizer</MenuItem>
+                        <MenuItem value="dessert">Dessert</MenuItem>
+                        <MenuItem value="drink">Drink</MenuItem>
+                        <MenuItem value="salad">Salad</MenuItem>
                     </Select>
                 </FormControl>
 
                 <FormControl component="fieldset" variant="standard" sx={{ marginBottom: 2, width: '100%' }}>
-                    <Typography component="legend" sx={{ marginBottom: 1, fontWeight: 'bold' }}>Diet & Health</Typography>
+                    <Typography component="legend" sx={{ marginBottom: 1, fontWeight: 'bold' }}>Diet</Typography>
                     <FormGroup sx={{
                         display: 'grid',
                         gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
@@ -133,9 +136,9 @@ function RecipeSearch() {
                     }}>
                         <FormControlLabel control={<Checkbox value="vegan" checked={health.includes("vegan")} onChange={handleHealthChange} />} label="Vegan" />
                         <FormControlLabel control={<Checkbox value="vegetarian" checked={health.includes("vegetarian")} onChange={handleHealthChange} />} label="Vegetarian" />
-                        <FormControlLabel control={<Checkbox value="low-sugar" checked={health.includes("low-sugar")} onChange={handleHealthChange} />} label="Low Sugar" />
-                        <FormControlLabel control={<Checkbox value="keto-friendly" checked={health.includes("keto-friendly")} onChange={handleHealthChange} />} label="Keto" />
-                        <FormControlLabel control={<Checkbox value="gluten-free" checked={health.includes("gluten-free")} onChange={handleHealthChange} />} label="Gluten-Free" />
+                        {/* <FormControlLabel control={<Checkbox value="low-sugar" checked={health.includes("low-sugar")} onChange={handleHealthChange} />} label="Low Sugar" /> */}
+                        <FormControlLabel control={<Checkbox value="keto-friendly" checked={health.includes("Ketogenic")} onChange={handleHealthChange} />} label="Keto" />
+                        <FormControlLabel control={<Checkbox value="gluten-free" checked={health.includes("Gluten Free")} onChange={handleHealthChange} />} label="Gluten Free" />
                     </FormGroup>
                 </FormControl>
 
