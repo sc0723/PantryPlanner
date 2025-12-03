@@ -13,6 +13,7 @@ export interface Ingredient {
     name: string;
     amount: number;
     unit: string;
+    original: string;
 }
 
 export interface InstructionStep {
@@ -47,7 +48,9 @@ export interface RecipeDetail {
     sourceUrl: string;
     extendedIngredients: Ingredient[];
     analyzedInstructions: AnalyzedInstruction[];
-    nutrition: NutrientWrapper[];
+    nutrition: NutrientWrapper;
+    nutrients: Nutrient[];
+    healthScore: number;
 }
 
 export interface ComplexSearchResponse {

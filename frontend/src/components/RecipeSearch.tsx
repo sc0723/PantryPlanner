@@ -7,6 +7,7 @@ import {
     Container, CircularProgress
 } from '@mui/material';
 import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 function RecipeSearch() {
     const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -17,6 +18,8 @@ function RecipeSearch() {
     const [calories, setCalories] = useState<string>("");
     const [time, setTime] = useState<string>("");
     const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const navigate = useNavigate();
 
     const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
@@ -169,7 +172,7 @@ function RecipeSearch() {
 
             <Box component="ul" sx={{ listStyleType: 'none', paddingLeft: 0, marginTop: 3 }}>
                 {!isLoading && recipes.map((recipe) => (
-                    <Box component="li" key={recipe.id} sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, borderBottom: '1px solid #eee', paddingBottom: 2 }}>
+                    <Box component="li" key={recipe.id} onClick={() => navigate(`/recipe/${recipe.id}`)} sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, borderBottom: '1px solid #eee', paddingBottom: 2 }}>
                         <img
                             src={recipe.image}
                             alt={recipe.title}
