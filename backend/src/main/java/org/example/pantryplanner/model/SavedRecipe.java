@@ -22,4 +22,11 @@ public class SavedRecipe {
     private int recipeId;
     private String recipeTitle;
     private String imageUrl;
+
+    public SavedRecipe(User user, int recipeId, String recipeTitle, String imageUrl) {
+        this.user = user;
+        this.recipeId = recipeId;
+        this.recipeTitle = recipeTitle;
+        this.imageUrl = imageUrl;
+    }
 }
