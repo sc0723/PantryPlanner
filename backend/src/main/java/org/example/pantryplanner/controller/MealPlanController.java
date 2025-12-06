@@ -19,8 +19,10 @@ public class MealPlanController {
     public MealPlanController(MealPlanService mealPlanService) { this.mealPlanService = mealPlanService; }
 
     @PostMapping("/recipes/save")
-    public ResponseEntity<SavedRecipe> saveRecipe(@RequestParam SaveRecipeRequestDTO request,
+    public ResponseEntity<SavedRecipe> saveRecipe(@RequestBody SaveRecipeRequestDTO request,
                                                            @AuthenticationPrincipal UserDetails userDetails) {
+
+        System.out.println("Principal: " + userDetails);
         SavedRecipe response = mealPlanService.saveRecipe(request, userDetails.getUsername());
 
         if (response != null) {

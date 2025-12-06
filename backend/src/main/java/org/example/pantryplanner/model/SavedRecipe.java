@@ -19,7 +19,9 @@ public class SavedRecipe {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "recipe_id", nullable = false)
     private int recipeId;
+
     private String recipeTitle;
     private String imageUrl;
 
