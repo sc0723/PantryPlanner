@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import api from '../services/api';
 import type { RecipeDetail, Ingredient, InstructionStep, Nutrient } from '../types/recipe';
+import { saveRecipe } from '../services/mealPlanService';
 
 const renderSummary = (htmlString: string) => {
     return (
@@ -63,7 +64,30 @@ function RecipeDetail() {
     const [recipe, setRecipe] = useState<RecipeDetail | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
     const navigate = useNavigate();
+
+    const handleSaveRecipe = async () => {
+        if (!recipe) return; // Prevent action if recipe data is missing
+
+        setIsSaving(true);
+        setSaveError(null);
+        try {
+            // Call the service function, passing the full recipe object
+            const savedItem = await saveRecipe(recipe);
+
+            // Check if the returned object has an ID (meaning it was saved or already existed)
+            if (savedItem && savedItem.id) {
+                setIsSaved(true);
+            }
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : "An unexpected error occurred during save.");
+        } finally {
+            setIsSaving(false);
+        }
+    };
 
     useEffect(() => {
         if (!id) {
@@ -132,7 +156,7 @@ function RecipeDetail() {
             <Grid container spacing={4} columns={12}>
 
                 {/* LEFT COLUMN */}
-                <Grid size={{ xs:12, md: 6 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Paper elevation={3} sx={{ overflow: 'hidden', borderRadius: 2 }}>
                         <img
                             src={recipe.image}
@@ -155,11 +179,19 @@ function RecipeDetail() {
                         >
                             View Original Instructions
                         </Button>
+                        <Button
+                            variant="outlined"
+                            color={isSaved ? "success" : "secondary"} // Green if saved
+                            onClick={handleSaveRecipe}
+                            disabled={isSaving || isSaved}
+                        >
+                            {isSaving ? <CircularProgress size={24} /> : (isSaved ? 'Recipe Saved!' : 'Save to Planner')}
+                        </Button>
                     </Box>
                 </Grid>
 
                 {/* RIGHT COLUMN */}
-                <Grid size= {{ xs:12, md:6 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Paper elevation={3} sx={{ p: 3, borderRadius: 2, mb: 3 }}>
                         <Typography variant="h5" gutterBottom>Details</Typography>
 
@@ -207,7 +239,7 @@ function RecipeDetail() {
             {/* NUTRITION FACTS */}
             <Grid container spacing={2} sx={{ mt: 4 }} columns={12}>
                 {recipe.nutrients && recipe.nutrients.slice(0, 8).map((nutrient: Nutrient) => (
-                    <Grid size= {{ xs:12, sm: 6, md: 3 }} key={nutrient.name}>
+                    <Grid size={{ xs: 12, sm: 6, md: 3 }} key={nutrient.name}>
                         <Paper
                             variant="outlined"
                             sx={{ p: 2, textAlign: 'center', height: '100%', backgroundColor: '#f5f5f5' }}

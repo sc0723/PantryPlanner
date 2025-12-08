@@ -1,6 +1,8 @@
 package org.example.pantryplanner.controller;
 
+import org.example.pantryplanner.dto.MealPlanRequestDTO;
 import org.example.pantryplanner.dto.SaveRecipeRequestDTO;
+import org.example.pantryplanner.model.MealPlanEntry;
 import org.example.pantryplanner.model.SavedRecipe;
 import org.example.pantryplanner.service.MealPlanService;
 import org.springframework.http.HttpStatus;
@@ -22,14 +24,24 @@ public class MealPlanController {
     public ResponseEntity<SavedRecipe> saveRecipe(@RequestBody SaveRecipeRequestDTO request,
                                                            @AuthenticationPrincipal UserDetails userDetails) {
 
-        System.out.println("Principal: " + userDetails);
         SavedRecipe response = mealPlanService.saveRecipe(request, userDetails.getUsername());
+
+        if (response != null) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
+    }
+    @PostMapping("/meals/schedule")
+    public ResponseEntity<MealPlanEntry> scheduleMeal(@RequestBody MealPlanRequestDTO request,
+                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        MealPlanEntry response = mealPlanService.scheduleMeal(request, userDetails.getUsername());
 
         if (response != null) {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
     }
 }
