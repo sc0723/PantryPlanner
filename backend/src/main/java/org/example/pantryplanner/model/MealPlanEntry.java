@@ -1,5 +1,6 @@
 package org.example.pantryplanner.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,7 @@ public class MealPlanEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -28,6 +30,7 @@ public class MealPlanEntry {
     private String mealType;
 
     // Foreign Key to saved_recipes table
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "saved_recipe_id", nullable = false)
     private SavedRecipe savedRecipe;

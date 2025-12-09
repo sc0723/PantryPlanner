@@ -1,5 +1,6 @@
 package org.example.pantryplanner.controller;
 
+import org.example.pantryplanner.dto.MealPlanEntryResponseDTO;
 import org.example.pantryplanner.dto.MealPlanRequestDTO;
 import org.example.pantryplanner.dto.SaveRecipeRequestDTO;
 import org.example.pantryplanner.model.MealPlanEntry;
@@ -10,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/plan")
@@ -27,7 +30,7 @@ public class MealPlanController {
         SavedRecipe response = mealPlanService.saveRecipe(request, userDetails.getUsername());
 
         if (response != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
@@ -39,7 +42,20 @@ public class MealPlanController {
         MealPlanEntry response = mealPlanService.scheduleMeal(request, userDetails.getUsername());
 
         if (response != null) {
-            return ResponseEntity.ok(response);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/meals")
+    public ResponseEntity<List<MealPlanEntryResponseDTO>> getMealPlanByDateRange(@RequestParam String startDate,
+                                                                      @RequestParam String endDate,
+                                                                      @AuthenticationPrincipal UserDetails userDetails) {
+        List<MealPlanEntryResponseDTO> response = mealPlanService.getMealPlanByDateRange(userDetails.getUsername(), startDate, endDate);
+
+        if (response != null) {
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } else {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
