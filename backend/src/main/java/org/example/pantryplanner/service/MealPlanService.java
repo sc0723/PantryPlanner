@@ -75,7 +75,7 @@ public class MealPlanService {
         return new MealPlanEntryResponseDTO(
                 entity.getId(),
                 entity.getUser().getId(), // Get the ID from the User object (already loaded)
-                entity.getSavedRecipe().getId(),
+                entity.getSavedRecipe().getRecipeId(),
                 entity.getSavedRecipe().getRecipeTitle(),
                 entity.getSavedRecipe().getImageUrl(),
                 entity.getPlannedDate(),
@@ -86,14 +86,10 @@ public class MealPlanService {
     public List<MealPlanEntryResponseDTO> getMealPlanByDateRange(String username, String startDate, String endDate) {
         LocalDate start = LocalDate.parse(startDate);
         LocalDate end = LocalDate.parse(endDate);
-        System.out.println("Parsed Date: " + start);
-        System.out.println("Parsed Date: " + end);
         User userRequested = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        System.out.println(userRequested.getUsername());
         List<MealPlanEntry> meals = mealPlanEntryRepository.findAllByUserAndPlannedDateBetween(userRequested,
                 start, end);
-        System.out.println(meals);
         return meals.stream().map(this::toDto).toList();
     }
 

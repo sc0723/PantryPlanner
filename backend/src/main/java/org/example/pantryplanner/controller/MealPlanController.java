@@ -52,7 +52,6 @@ public class MealPlanController {
     public ResponseEntity<List<MealPlanEntryResponseDTO>> getMealPlanByDateRange(@RequestParam String startDate,
                                                                       @RequestParam String endDate,
                                                                       @AuthenticationPrincipal UserDetails userDetails) {
-        System.out.println(userDetails.getUsername());
         List<MealPlanEntryResponseDTO> response = mealPlanService.getMealPlanByDateRange(userDetails.getUsername(), startDate, endDate);
         if (response != null) {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);

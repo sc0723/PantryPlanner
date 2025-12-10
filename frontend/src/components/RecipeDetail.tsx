@@ -145,7 +145,7 @@ function RecipeDetail() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Button onClick={() => navigate(-1)} variant="outlined" sx={{ mb: 3 }}>
-                ← Back to Search
+                ← Back to Planner
             </Button>
 
             <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>

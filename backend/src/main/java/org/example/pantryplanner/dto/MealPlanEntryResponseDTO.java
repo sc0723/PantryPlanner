@@ -4,7 +4,7 @@ import java.time.LocalDate;
 
 public record MealPlanEntryResponseDTO(Long id,
                                        Long userId,
-                                       Long savedRecipeId,
+                                       int spoonacularRecipeId,
                                        String recipeTitle,
                                        String imageUrl,
                                        LocalDate plannedDate,

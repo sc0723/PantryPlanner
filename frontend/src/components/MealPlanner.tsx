@@ -10,7 +10,7 @@ import { useAuthStore } from '../store/authStore';
 interface MealEntry {
     id: number;
     userId: number;
-    savedRecipeId: number;
+    spoonacularRecipeId: number;
     recipeTitle: string;
     imageUrl: string;
     plannedDate: string;
@@ -181,7 +181,7 @@ function MealPlanner() {
                                             {meals.map(meal => (
                                                 <Card
                                                     key={meal.id}
-                                                    onClick={() => handleGoToRecipe(meal.savedRecipeId)}
+                                                    onClick={() => handleGoToRecipe(meal.spoonacularRecipeId)}
                                                     sx={{
                                                         cursor: 'pointer',
                                                         transition: 'transform 0.2s, box-shadow 0.2s',
