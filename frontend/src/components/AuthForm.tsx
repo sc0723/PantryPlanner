@@ -4,8 +4,10 @@ import {
 } from '@mui/material';
 import { loginUser, registerUser } from '../services/authService';
 import { useAuthStore } from '../store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 function AuthForm() {
+    const navigate = useNavigate();
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
     const [error, setError] = useState<string | null>(null);
@@ -17,6 +19,7 @@ function AuthForm() {
             
             useAuthStore.getState().login(token);
             console.log("Store after login:", useAuthStore.getState());
+            navigate('/planner', { replace: true });
         } catch (error) {
             setError("Login failed. Please check your credentials.")
         };
@@ -28,6 +31,7 @@ function AuthForm() {
             const token: string = await registerUser(username, password);
             
             useAuthStore.getState().login(token);
+            navigate('/planner', { replace: true })
         } catch (error) {
             setError("Registration failed. Username might be taken.")
         };

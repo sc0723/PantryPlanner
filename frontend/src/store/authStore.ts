@@ -1,14 +1,11 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
-
+// Decode JWT token safely
 const decodeToken = (token: string): { sub?: string; [key: string]: any } | null => {
     try {
-        // Split the token into parts (header, payload, signature)
         const base64Url = token.split('.')[1];
-        // Replace Base64Url characters with Base64 characters
         const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        // Decode the Base64 string and parse it as JSON
         const jsonPayload = decodeURIComponent(
             atob(base64)
                 .split('')
@@ -16,48 +13,47 @@ const decodeToken = (token: string): { sub?: string; [key: string]: any } | null
                 .join('')
         );
         return JSON.parse(jsonPayload);
-    } catch (error) {
-        console.error("Failed to decode JWT token:", error);
-        return null; // Return null if decoding fails
+    } catch {
+        return null;
     }
 };
 
-
 interface AuthState {
-    token: string | null; // Stores the JWT token
-    user: string | null;  // Stores the username extracted from the token
+    token: string | null;
+    user: string | null;
+    login: (token: string) => void;
+    logout: () => void;
 }
 
-
-interface AuthActions {
-    login: (token: string) => void; // Function to set the token and user
-    logout: () => void;            // Function to clear the token and user
-}
-
-
-export const useAuthStore = create<AuthState & AuthActions>()(
+export const useAuthStore = create<AuthState>()(
     persist(
         (set) => ({
             token: null,
             user: null,
-            
-            login: (token) => {
+
+            login: (token: string) => {
                 const decoded = decodeToken(token);
-                const username = decoded?.sub || null; 
-
-                set({ token: token, user: username });
-                console.log("User logged in:", username); // For debugging
+                const username = decoded?.sub ?? null;
+                set({ token, user: username });
             },
 
-            logout: () => {
-                set({ token: null, user: null });
-                console.log("User logged out"); 
-            },
+            logout: () => set({ token: null, user: null }),
         }),
         {
             name: 'auth-storage',
             storage: createJSONStorage(() => sessionStorage),
-            partialize: (state) => ({ token: state.token }),
+
+            // Ensure `user` is correctly derived from token during hydration
+            onRehydrateStorage: () => (state) => {
+                if (state?.token) {
+                    const decoded = decodeToken(state.token);
+                    state.user = decoded?.sub ?? null;
+                } else {
+                    state.user = null;
+                }
+                return state;
+            },
         }
     )
 );
+

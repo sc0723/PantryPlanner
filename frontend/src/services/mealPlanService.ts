@@ -17,3 +17,20 @@ export async function saveRecipe(recipeDetails: RecipeDetail) {
         throw new Error("Failed to save recipe. Please check if you are logged in."); 
      }
 }
+
+export async function fetchMealPlan(startDate: string, endDate: string) {
+    try {
+        const response = await api.get('/api/v1/plan/meals',
+            {
+                params: {
+                    startDate: startDate || "",
+                    endDate: endDate || ""
+                }
+            }
+        );
+        return response.data;
+    } catch (error) {
+        console.log("Error fetching recipes")
+        throw new Error("Error saving recipes")
+    }
+}

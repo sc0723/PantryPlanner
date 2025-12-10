@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
-import api from "../services/api"
+import api from "../services/api";
 import type { ComplexSearchResponse, Recipe } from '../types/recipe';
 import {
     TextField, Button, Box, Typography, Select, FormControl,
     FormGroup, Checkbox, InputLabel, MenuItem, FormControlLabel,
-    Container, CircularProgress
+    Container, CircularProgress, AppBar, Toolbar
 } from '@mui/material';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
+
+function TopNav() {
+    const navigate = useNavigate();
+    const logout = useAuthStore((state) => state.logout);
+
+    return (
+        <AppBar position="static" sx={{ mb: 3 }}>
+            <Toolbar>
+                <Typography variant="h6" sx={{ flexGrow: 1 }}>Pantry Planner</Typography>
+                <Button color="inherit" onClick={() => navigate("/planner")}>Planner</Button>
+                <Button color="inherit" onClick={() => navigate("/search")}>Search</Button>
+                <Button color="inherit" onClick={() => { logout(); navigate("/auth", { replace: true }); }}>Logout</Button>
+            </Toolbar>
+        </AppBar>
+    );
+}
 
 function RecipeSearch() {
     const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -20,21 +36,12 @@ function RecipeSearch() {
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const navigate = useNavigate();
-
-    const logout = useAuthStore((state) => state.logout);
     const user = useAuthStore((state) => state.user);
 
     const handleHealthChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const value = event.target.value;
         const isChecked = event.target.checked;
-
-        setHealth((prevHealth) => {
-            if (isChecked) {
-                return [...prevHealth, value];
-            } else {
-                return prevHealth.filter((item) => item !== value);
-            }
-        });
+        setHealth(prev => isChecked ? [...prev, value] : prev.filter(item => item !== value));
     };
 
     async function performSearch() {
@@ -43,57 +50,38 @@ function RecipeSearch() {
             setRecipes([]);
             return;
         }
-
+        setIsLoading(true);
         setError(null);
         try {
-            const response = await api.get<ComplexSearchResponse>(
-                '/api/v1/recipes/search',
-                {
-                    params: {
-                        query: searchTerm,
-                        health: health || undefined,
-                        mealType: mealType || undefined,
-                        calories: calories || undefined,
-                        time: time || undefined
-                    }
+            const response = await api.get<ComplexSearchResponse>('/api/v1/recipes/search', {
+                params: {
+                    query: searchTerm,
+                    health: health.length > 0 ? health : undefined,
+                    mealType: mealType || undefined,
+                    calories: calories || undefined,
+                    time: time || undefined
                 }
-            );
-
+            });
             setRecipes(response.data.results);
-            if (response.data.results.length === 0) {
-                setError("No recipes found. Try different filters!");
-            }
-            const recipeArray = response.data.results;
-            console.log(response.data);
+            if (response.data.results.length === 0) setError("No recipes found. Try different filters!");
         } catch (err) {
-            console.error("Error fetching recipes:", err);
-            setError('Failed to fetch recipes. Please try again later.');
+            console.error(err);
+            setError("Failed to fetch recipes. Please try again later.");
         } finally {
             setIsLoading(false);
         }
     }
 
     return (
-        <Container maxWidth="md" sx={{ paddingY: 4 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                <Typography variant="h6">
-                    Welcome, {user || 'User'}!
-                </Typography>
-                <Button
-                    variant="outlined"
-                    color="secondary"
-                    onClick={logout} // Call the logout action from the store
-                >
-                    Logout
-                </Button>
-            </Box>
-            <Typography variant="h3" component="h1" align="center" gutterBottom>
-                Pantry Planner
-            </Typography>
+        <Container maxWidth="md" sx={{ py: 4 }}>
+            <TopNav />
 
-            <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 3 }}>
+            <Typography variant="h5" gutterBottom>Welcome, {user || "User"}!</Typography>
+
+            {/* Search Input */}
+            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
                 <TextField
-                    label="Search for any ingredient..."
+                    label="Search for ingredients..."
                     variant="outlined"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -101,18 +89,18 @@ function RecipeSearch() {
                 />
                 <Button
                     variant="contained"
-                    sx={{ marginLeft: '10px', height: '56px' }}
                     onClick={performSearch}
                     disabled={isLoading}
                 >
-                    {isLoading ? <CircularProgress size={24} /> : 'Search'}
+                    {isLoading ? <CircularProgress size={24} /> : "Search"}
                 </Button>
             </Box>
 
-            <Box sx={{ border: '1px solid #ddd', borderRadius: '8px', padding: 3, backgroundColor: '#fafafa' }}>
+            {/* Filters */}
+            <Box sx={{ border: '1px solid #ddd', borderRadius: 2, p: 3, backgroundColor: '#fafafa', mb: 3 }}>
                 <Typography variant="h6" gutterBottom>Filters</Typography>
 
-                <FormControl fullWidth sx={{ marginBottom: 2 }}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
                     <InputLabel id="meal-type-label">Meal Type</InputLabel>
                     <Select
                         labelId="meal-type-label"
@@ -130,18 +118,13 @@ function RecipeSearch() {
                     </Select>
                 </FormControl>
 
-                <FormControl component="fieldset" variant="standard" sx={{ marginBottom: 2, width: '100%' }}>
-                    <Typography component="legend" sx={{ marginBottom: 1, fontWeight: 'bold' }}>Diet</Typography>
-                    <FormGroup sx={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                        gap: '0 10px'
-                    }}>
+                <FormControl component="fieldset" variant="standard" sx={{ mb: 2, width: '100%' }}>
+                    <Typography component="legend" sx={{ mb: 1, fontWeight: 'bold' }}>Diet</Typography>
+                    <FormGroup sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '0 10px' }}>
                         <FormControlLabel control={<Checkbox value="vegan" checked={health.includes("vegan")} onChange={handleHealthChange} />} label="Vegan" />
                         <FormControlLabel control={<Checkbox value="vegetarian" checked={health.includes("vegetarian")} onChange={handleHealthChange} />} label="Vegetarian" />
-                        {/* <FormControlLabel control={<Checkbox value="low-sugar" checked={health.includes("low-sugar")} onChange={handleHealthChange} />} label="Low Sugar" /> */}
-                        <FormControlLabel control={<Checkbox value="keto-friendly" checked={health.includes("Ketogenic")} onChange={handleHealthChange} />} label="Keto" />
-                        <FormControlLabel control={<Checkbox value="gluten-free" checked={health.includes("Gluten Free")} onChange={handleHealthChange} />} label="Gluten Free" />
+                        <FormControlLabel control={<Checkbox value="ketogenic" checked={health.includes("ketogenic")} onChange={handleHealthChange} />} label="Keto" />
+                        <FormControlLabel control={<Checkbox value="gluten-free" checked={health.includes("gluten-free")} onChange={handleHealthChange} />} label="Gluten Free" />
                     </FormGroup>
                 </FormControl>
 
@@ -163,23 +146,18 @@ function RecipeSearch() {
                 </Box>
             </Box>
 
-            {error && <Typography color="error" align="center" sx={{ marginTop: 2 }}>{error}</Typography>}
-            {isLoading && (
-                <Box sx={{ display: 'flex', justifyContent: 'center', marginY: 4 }}>
-                    <CircularProgress />
-                </Box>
-            )}
+            {error && <Typography color="error" sx={{ mt: 2 }}>{error}</Typography>}
 
-            <Box component="ul" sx={{ listStyleType: 'none', paddingLeft: 0, marginTop: 3 }}>
-                {!isLoading && recipes.map((recipe) => (
-                    <Box component="li" key={recipe.id} onClick={() => navigate(`/recipe/${recipe.id}`)} sx={{ display: 'flex', alignItems: 'center', marginBottom: 2, borderBottom: '1px solid #eee', paddingBottom: 2 }}>
-                        <img
-                            src={recipe.image}
-                            alt={recipe.title}
-                            width={100}
-                            height={100}
-                            style={{ borderRadius: '8px', marginRight: '15px' }}
-                        />
+            {/* Recipes List */}
+            <Box component="ul" sx={{ listStyleType: 'none', p: 0, mt: 3 }}>
+                {!isLoading && recipes.map(recipe => (
+                    <Box
+                        component="li"
+                        key={recipe.id}
+                        onClick={() => navigate(`/recipe/${recipe.id}`)}
+                        sx={{ display: 'flex', alignItems: 'center', mb: 2, borderBottom: '1px solid #eee', pb: 2, cursor: 'pointer' }}
+                    >
+                        <img src={recipe.image} alt={recipe.title} width={100} height={100} style={{ borderRadius: 8, marginRight: 15 }} />
                         <Box>
                             <Typography variant="h6">{recipe.title}</Typography>
                             <Typography variant="body2" color="textSecondary">{recipe.readyInMinutes} mins | Servings: {recipe.servings} | Score: {Math.round(recipe.healthScore)}</Typography>
@@ -189,7 +167,7 @@ function RecipeSearch() {
             </Box>
         </Container>
     );
-};
-
+}
 
 export default RecipeSearch;
+
