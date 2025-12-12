@@ -34,3 +34,19 @@ export async function fetchMealPlan(startDate: string, endDate: string) {
         throw new Error("Error saving recipes")
     }
 }
+
+export async function scheduleMeal(recipeId: number, plannedDate: string, mealType: string) {
+    const payload = {
+        recipeId,
+        plannedDate,
+        mealType
+    }
+
+    try {
+        const response = await api.post('/api/v1/plan/meals/schedule', payload)
+        return response.data;
+    } catch (error) {
+        console.error("Error scheduling meal: ", error)
+        throw new Error("Failed to schedule meal.")
+    }
+}

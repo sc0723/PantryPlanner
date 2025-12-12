@@ -3,11 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
     Container, Box, Typography, Button,
     CircularProgress, Grid, Paper, List, ListItem, ListItemText,
-    Alert
+    Alert, Dialog, DialogTitle, DialogContent, DialogActions, TextField,
+    MenuItem, IconButton
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import api from '../services/api';
 import type { RecipeDetail, Ingredient, InstructionStep, Nutrient } from '../types/recipe';
-import { saveRecipe } from '../services/mealPlanService';
+import { saveRecipe, scheduleMeal } from '../services/mealPlanService';
+import { format } from 'date-fns';
 
 const renderSummary = (htmlString: string) => {
     return (
@@ -67,18 +70,20 @@ function RecipeDetail() {
     const [isSaving, setIsSaving] = useState(false);
     const [isSaved, setIsSaved] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
+    const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState('');
+    const [selectedMealType, setSelectedMealType] = useState('LUNCH');
+    const [isScheduling, setIsScheduling] = useState(false);
+    const [scheduleSuccess, setScheduleSuccess] = useState(false);
     const navigate = useNavigate();
 
     const handleSaveRecipe = async () => {
-        if (!recipe) return; // Prevent action if recipe data is missing
+        if (!recipe) return;
 
         setIsSaving(true);
         setSaveError(null);
         try {
-            // Call the service function, passing the full recipe object
             const savedItem = await saveRecipe(recipe);
-
-            // Check if the returned object has an ID (meaning it was saved or already existed)
             if (savedItem && savedItem.id) {
                 setIsSaved(true);
             }
@@ -86,6 +91,47 @@ function RecipeDetail() {
             setSaveError(error instanceof Error ? error.message : "An unexpected error occurred during save.");
         } finally {
             setIsSaving(false);
+        }
+    };
+
+    const handleOpenScheduleDialog = () => {
+        setScheduleDialogOpen(true);
+        setSelectedDate(format(new Date(), 'yyyy-MM-dd'));
+        setScheduleSuccess(false);
+    };
+
+    const handleCloseScheduleDialog = () => {
+        setScheduleDialogOpen(false);
+        setSelectedDate('');
+        setSelectedMealType('LUNCH');
+        setScheduleSuccess(false);
+    };
+
+    const handleScheduleMeal = async () => {
+        if (!recipe || !selectedDate) return;
+
+        setIsScheduling(true);
+        setSaveError(null);
+        try {
+            // First, ensure the recipe is saved
+            if (!isSaved) {
+                const savedItem = await saveRecipe(recipe);
+                if (savedItem && savedItem.id) {
+                    setIsSaved(true);
+                }
+            }
+            
+            // Then schedule the meal
+            await scheduleMeal(Number(id), selectedDate, selectedMealType);
+            setScheduleSuccess(true);
+            setTimeout(() => {
+                handleCloseScheduleDialog();
+            }, 1500);
+        } catch (error) {
+            setSaveError(error instanceof Error ? error.message : "Failed to schedule meal. Make sure the recipe is saved first.");
+            setScheduleSuccess(false);
+        } finally {
+            setIsScheduling(false);
         }
     };
 
@@ -145,7 +191,7 @@ function RecipeDetail() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Button onClick={() => navigate(-1)} variant="outlined" sx={{ mb: 3 }}>
-                ← Back to Planner
+                ← Back
             </Button>
 
             <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -169,7 +215,7 @@ function RecipeDetail() {
                         </Box>
                     </Paper>
 
-                    <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                    <Box sx={{ mt: 2, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                         <Button
                             variant="contained"
                             color="primary"
@@ -181,11 +227,18 @@ function RecipeDetail() {
                         </Button>
                         <Button
                             variant="outlined"
-                            color={isSaved ? "success" : "secondary"} // Green if saved
+                            color={isSaved ? "success" : "secondary"}
                             onClick={handleSaveRecipe}
                             disabled={isSaving || isSaved}
                         >
                             {isSaving ? <CircularProgress size={24} /> : (isSaved ? 'Recipe Saved!' : 'Save to Planner')}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            onClick={handleOpenScheduleDialog}
+                        >
+                            Schedule Meal
                         </Button>
                     </Box>
                 </Grid>
@@ -252,6 +305,75 @@ function RecipeDetail() {
                     </Grid>
                 ))}
             </Grid>
+
+            {/* Schedule Meal Dialog */}
+            <Dialog 
+                open={scheduleDialogOpen} 
+                onClose={handleCloseScheduleDialog}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="h6">Schedule Meal</Typography>
+                        <IconButton onClick={handleCloseScheduleDialog}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
+                </DialogTitle>
+                <DialogContent>
+                    {saveError && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {saveError}
+                        </Alert>
+                    )}
+                    {scheduleSuccess ? (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            Meal scheduled successfully!
+                        </Alert>
+                    ) : (
+                        <>
+                            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                                Schedule "{recipe?.title}" for a specific date and meal time
+                            </Typography>
+                            
+                            <TextField
+                                fullWidth
+                                label="Date"
+                                type="date"
+                                value={selectedDate}
+                                onChange={(e) => setSelectedDate(e.target.value)}
+                                sx={{ mb: 2 }}
+                                InputLabelProps={{ shrink: true }}
+                            />
+                            
+                            <TextField
+                                fullWidth
+                                select
+                                label="Meal Type"
+                                value={selectedMealType}
+                                onChange={(e) => setSelectedMealType(e.target.value)}
+                            >
+                                <MenuItem value="BREAKFAST">Breakfast</MenuItem>
+                                <MenuItem value="LUNCH">Lunch</MenuItem>
+                                <MenuItem value="DINNER">Dinner</MenuItem>
+                            </TextField>
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseScheduleDialog}>Cancel</Button>
+                    {!scheduleSuccess && (
+                        <Button 
+                            onClick={handleScheduleMeal}
+                            variant="contained"
+                            disabled={isScheduling || !selectedDate}
+                        >
+                            {isScheduling ? <CircularProgress size={24} /> : 'Schedule'}
+                        </Button>
+                    )}
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }
