@@ -59,3 +59,10 @@ export interface ComplexSearchResponse {
     results: Recipe[];
     totalResults: number;
 }
+
+export interface SavedRecipe {
+    id: number;
+    recipeId: number;
+    recipeTitle: string;
+    imageUrl: string;
+}

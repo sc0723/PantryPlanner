@@ -1,6 +1,7 @@
 package org.example.pantryplanner.repository;
 
 import org.example.pantryplanner.model.MealPlanEntry;
+import org.example.pantryplanner.model.SavedRecipe;
 import org.example.pantryplanner.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -14,4 +15,5 @@ import java.util.Optional;
 public interface MealPlanEntryRepository extends JpaRepository<MealPlanEntry, Long> {
     List<MealPlanEntry> findAllByUser(User user);
     List<MealPlanEntry> findAllByUserAndPlannedDateBetween(User user, LocalDate startDate, LocalDate endDate);
+    void deleteAllBySavedRecipe(SavedRecipe savedRecipe);
 }

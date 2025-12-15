@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface SavedRecipeRepository extends JpaRepository<SavedRecipe, Long> {
     Optional<SavedRecipe> findByRecipeIdAndUser(int recipeId, User user);
     List<SavedRecipe> findAllByUser(User user);
+    Optional<SavedRecipe> findByIdAndUser(Long id, User user);
 }

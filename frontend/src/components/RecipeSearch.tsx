@@ -19,6 +19,7 @@ function TopNav() {
                 <Typography variant="h6" sx={{ flexGrow: 1 }}>Pantry Planner</Typography>
                 <Button color="inherit" onClick={() => navigate("/planner")}>Planner</Button>
                 <Button color="inherit" onClick={() => navigate("/search")}>Search</Button>
+                <Button color="inherit" onClick={() => navigate("/saved")}>Saved Recipes</Button>
                 <Button color="inherit" onClick={() => { logout(); navigate("/auth", { replace: true }); }}>Logout</Button>
             </Toolbar>
         </AppBar>

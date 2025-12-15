@@ -44,9 +44,11 @@ export async function scheduleMeal(recipeId: number, plannedDate: string, mealTy
 
     try {
         const response = await api.post('/api/v1/plan/meals/schedule', payload)
+        console.log(response.data)
         return response.data;
     } catch (error) {
         console.error("Error scheduling meal: ", error)
         throw new Error("Failed to schedule meal.")
     }
 }
+

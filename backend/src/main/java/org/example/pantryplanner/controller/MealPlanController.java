@@ -59,4 +59,20 @@ public class MealPlanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    @GetMapping("/recipes/saved")
+    public ResponseEntity<List<SavedRecipe>> getSavedRecipeByUser(@AuthenticationPrincipal UserDetails userDetails) {
+        List<SavedRecipe> response = mealPlanService.getSavedRecipeByUser(userDetails.getUsername());
+        if (response != null) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    @DeleteMapping("/recipes/{id}")
+    public ResponseEntity<String> deleteRecipe(@PathVariable("id") Long id,
+                                               @AuthenticationPrincipal UserDetails userDetails) {
+        mealPlanService.deleteSavedRecipe(userDetails.getUsername(), id);
+
+        return ResponseEntity.noContent().build();
+    }
 }

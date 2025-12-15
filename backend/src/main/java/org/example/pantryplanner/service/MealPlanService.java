@@ -1,5 +1,6 @@
 package org.example.pantryplanner.service;
 
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.example.pantryplanner.dto.MealPlanEntryResponseDTO;
 import org.example.pantryplanner.dto.MealPlanRequestDTO;
@@ -93,4 +94,24 @@ public class MealPlanService {
         return meals.stream().map(this::toDto).toList();
     }
 
+    public List<SavedRecipe> getSavedRecipeByUser(String username) {
+        User userRequested = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        List<SavedRecipe> savedRecipes = savedRecipeRepository.findAllByUser(userRequested);
+
+        return savedRecipes;
+    }
+
+    @Transactional
+    public void deleteSavedRecipe(String username, Long id) {
+        User userRequested = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        SavedRecipe toDelete = savedRecipeRepository.findByIdAndUser(id, userRequested)
+                .orElseThrow(() -> new IllegalArgumentException("Recipe with that user and id not found"));
+
+        mealPlanEntryRepository.deleteAllBySavedRecipe(toDelete);
+        this.savedRecipeRepository.delete(toDelete);
+    }
 }
