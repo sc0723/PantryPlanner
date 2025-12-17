@@ -1,4 +1,9 @@
 package org.example.pantryplanner.dto;
 
-public record GroceryListResponseDTO() {
+import java.time.LocalDate;
+import java.util.List;
+
+public record GroceryListResponseDTO(LocalDate startDate,
+                                     LocalDate endDate,
+                                     List<GroceryItemDTO> items) {
 }
