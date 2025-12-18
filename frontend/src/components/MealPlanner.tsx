@@ -39,6 +39,7 @@ function TopNav() {
                 <Button color="inherit" onClick={() => navigate("/planner")}>Planner</Button>
                 <Button color="inherit" onClick={() => navigate("/search")}>Search</Button>
                 <Button color="inherit" onClick={() => navigate("/saved")}>Saved Recipes</Button>
+                <Button color="inherit" onClick={() => navigate("/grocery-list")}>GroceryList</Button>
                 <Button color="inherit" onClick={() => {
                     useAuthStore.getState().logout();
                     navigate("/auth", { replace: true });

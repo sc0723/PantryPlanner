@@ -8,6 +8,7 @@ import MealPlanner from './components/MealPlanner';
 import RecipeDetail from './components/RecipeDetail';
 import RecipeSearch from './components/RecipeSearch';
 import SavedRecipes from './components/SavedRecipes';
+import GroceryList from './components/GroceryList';
 
 function App() {
     const token = useAuthStore((state) => state.token);
@@ -51,6 +52,10 @@ function App() {
                 <Route
                     path="/saved"
                     element={token ? <SavedRecipes key={token} /> : <Navigate to="/auth" replace />}
+                />
+                <Route
+                    path="/grocery-list"
+                    element={token ? <GroceryList key={token} /> : <Navigate to="/auth" replace />}
                 />
             </Routes>
         </BrowserRouter>
