@@ -8,8 +8,10 @@ import {
 import PrintIcon from '@mui/icons-material/Print';
 import DownloadIcon from '@mui/icons-material/Download';
 import { useAuthStore } from '../store/authStore';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import api from '../services/api';
+
+/* ---------- types ---------- */
 
 interface GroceryItemDTO {
     name: string;
@@ -22,6 +24,20 @@ interface GroceryListResponseDTO {
     endDate: string;
     items: GroceryItemDTO[];
 }
+
+/* ---------- helpers ---------- */
+
+const getCurrentWeekMonday = () => {
+    const today = new Date();
+    const day = today.getDay(); // 0 = Sun
+    const diff = day === 0 ? -6 : 1 - day;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + diff);
+    monday.setHours(0, 0, 0, 0);
+    return monday;
+};
+
+/* ---------- top nav ---------- */
 
 function TopNav() {
     const navigate = useNavigate();
@@ -37,96 +53,78 @@ function TopNav() {
                 <Button color="inherit" onClick={() => {
                     useAuthStore.getState().logout();
                     navigate("/auth", { replace: true });
-                }}>Logout</Button>
+                }}>
+                    Logout
+                </Button>
             </Toolbar>
         </AppBar>
     );
 }
+
+/* ---------- grocery list ---------- */
 
 function GroceryList() {
     const [groceryList, setGroceryList] = useState<GroceryListResponseDTO | null>(null);
     const [checkedItems, setCheckedItems] = useState<Set<string>>(new Set());
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [weekStart, setWeekStart] = useState<Date | null>(null);
+
+    // ⭐ Single source of truth
+    const [weekStart, setWeekStart] = useState<Date>(() => getCurrentWeekMonday());
 
     const navigate = useNavigate();
 
-    const fetchGroceryList = async (startDate: string, endDate: string) => {
+    const weekEnd = addDays(weekStart, 6);
+
+    const fetchGroceryList = async () => {
         setIsLoading(true);
         setError(null);
+
         try {
-            const response = await api.get<GroceryListResponseDTO>('/api/v1/plan/grocery-list', {
-                params: { startDate, endDate }
-            });
-            console.log(response.data)
+            const response = await api.get<GroceryListResponseDTO>(
+                '/api/v1/plan/grocery-list',
+                {
+                    params: {
+                        startDate: format(weekStart, 'yyyy-MM-dd'),
+                        endDate: format(weekEnd, 'yyyy-MM-dd')
+                    }
+                }
+            );
+
             setGroceryList(response.data);
-            setCheckedItems(new Set()); // Reset checked items when new list loads
+            setCheckedItems(new Set());
         } catch (err) {
-            console.error('Error fetching grocery list:', err);
+            console.error(err);
             setError('Failed to load grocery list');
         } finally {
             setIsLoading(false);
         }
     };
 
+    // 🔁 Refetch whenever week changes
     useEffect(() => {
-        // // Load current week's grocery list by default
-        // const today = new Date();
-        // const startOfWeek = new Date(today);
-        // startOfWeek.setDate(today.getDate() - today.getDay() + 1); // Monday
-        // const endOfWeek = new Date(startOfWeek);
-        // endOfWeek.setDate(startOfWeek.getDate() + 6); // Sunday
-
-        // const startStr = format(startOfWeek, 'yyyy-MM-dd');
-        // const endStr = format(endOfWeek, 'yyyy-MM-dd');
-        // fetchGroceryList(startStr, endStr);
-        const today = new Date();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - today.getDate() + 1);
-        setWeekStart(monday);
-    }, []);
-
-    useEffect(() => {
-        if (!weekStart) return;
-        const start = new Date(weekStart)
-        const end = new Date(weekStart)
-
-        end.setDate(start.getDate() + 6)
-
-        fetchGroceryList(
-            format(start, 'yyyy-MM-dd'),
-            format(end, 'yyyy-MM-dd')
-        );
+        fetchGroceryList();
     }, [weekStart]);
 
-    const goToPreviousWeek = () => {
-        if (!weekStart) return;
-        const prev = new Date(weekStart);
-        prev.setDate(prev.getDate() - 7);
-        setWeekStart(prev);
+    /* ---------- navigation ---------- */
+
+    const goToPrevWeek = () => {
+        setWeekStart(prev => addDays(prev, -7));
     };
 
     const goToNextWeek = () => {
-        if (!weekStart) return;
-        const next = new Date(weekStart);
-        next.setDate(next.getDate() + 7);
-        setWeekStart(next);
+        setWeekStart(prev => addDays(prev, 7));
     };
 
-    const handleToggleItem = (ingredient: string) => {
-        const newChecked = new Set(checkedItems);
-        if (newChecked.has(ingredient)) {
-            newChecked.delete(ingredient);
-        } else {
-            newChecked.add(ingredient);
-        }
-        setCheckedItems(newChecked);
+    const handleToggleItem = (key: string) => {
+        setCheckedItems(prev => {
+            const next = new Set(prev);
+            next.has(key) ? next.delete(key) : next.add(key);
+            return next;
+        });
     };
 
-    const handlePrint = () => {
-        window.print();
-    };
+    const handlePrint = () => window.print();
 
     const handleDownload = () => {
         if (!groceryList) return;
@@ -141,21 +139,23 @@ function GroceryList() {
         ].join('\n');
 
         const blob = new Blob([content], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+
         const a = document.createElement('a');
         a.href = url;
         a.download = `grocery-list-${groceryList.startDate}.txt`;
-        document.body.appendChild(a);
         a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(url);
+
+        URL.revokeObjectURL(url);
     };
+
+    /* ---------- render ---------- */
 
     if (isLoading) {
         return (
             <Container maxWidth="lg" sx={{ py: 4 }}>
                 <TopNav />
-                <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '400px' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', minHeight: 400 }}>
                     <CircularProgress />
                 </Box>
             </Container>
@@ -168,164 +168,58 @@ function GroceryList() {
 
             {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
 
-            {groceryList ? (
+            {groceryList && (
                 <>
-                    {/* <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                    {/* Header */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                         <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                            <Typography variant="h4" fontWeight="bold">
                                 Grocery List
                             </Typography>
-                            <Typography variant="subtitle1" color="text.secondary">
-                                {format(new Date(groceryList.startDate), 'MMM d')} - {format(new Date(groceryList.endDate), 'MMM d, yyyy')}
+                            <Typography color="text.secondary">
+                                {format(weekStart, 'MMM d')} – {format(weekEnd, 'MMM d, yyyy')}
                             </Typography>
                         </Box>
+
                         <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton 
-                                onClick={handlePrint}
-                                sx={{ 
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    '@media print': { display: 'none' }
-                                }}
-                            >
-                                <PrintIcon />
-                            </IconButton>
-                            <IconButton 
-                                onClick={handleDownload}
-                                sx={{ 
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    '@media print': { display: 'none' }
-                                }}
-                            >
-                                <DownloadIcon />
-                            </IconButton>
-                        </Box>
-                    </Box> */}
-
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                        <Box>
-                            <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
-                                Grocery List
-                            </Typography>
-                            {weekStart && (
-                                <Typography variant="subtitle1" color="text.secondary">
-                                    {format(weekStart, 'MMM d')} – {format(new Date(weekStart.getTime() + 6 * 86400000), 'MMM d, yyyy')}
-                                </Typography>
-                            )}
-                        </Box>
-
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                            <Button variant="outlined" onClick={goToPreviousWeek}>
-                                Previous
-                            </Button>
-                            <Button variant="outlined" onClick={goToNextWeek}>
-                                Next
-                            </Button>
-
-                            <IconButton
-                                onClick={handlePrint}
-                                sx={{ border: '1px solid', borderColor: 'divider', '@media print': { display: 'none' } }}
-                            >
-                                <PrintIcon />
-                            </IconButton>
-                            <IconButton
-                                onClick={handleDownload}
-                                sx={{ border: '1px solid', borderColor: 'divider', '@media print': { display: 'none' } }}
-                            >
-                                <DownloadIcon />
-                            </IconButton>
+                            <Button onClick={goToPrevWeek}>Previous</Button>
+                            <Button onClick={goToNextWeek}>Next</Button>
+                            <IconButton onClick={handlePrint}><PrintIcon /></IconButton>
+                            <IconButton onClick={handleDownload}><DownloadIcon /></IconButton>
                         </Box>
                     </Box>
 
-                    <Paper elevation={2} sx={{ p: 3 }}>
-                        {groceryList.items.length === 0 ? (
-                            <Box sx={{ textAlign: 'center', py: 4 }}>
-                                <Typography variant="h6" color="text.secondary">
-                                    No ingredients needed
-                                </Typography>
-                                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                                    Schedule some meals to generate your grocery list
-                                </Typography>
-                                <Button
-                                    variant="contained"
-                                    sx={{ mt: 2 }}
-                                    onClick={() => navigate('/planner')}
-                                >
-                                    Go to Planner
-                                </Button>
-                            </Box>
-                        ) : (
-                            <>
-                                <Typography variant="h6" gutterBottom>
-                                    Items ({groceryList.items.length})
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    color="text.secondary"
-                                    sx={{
-                                        mb: 2,
-                                        display: 'block',
-                                        '@media print': { display: 'none' }
-                                    }}
-                                >
-                                    {checkedItems.size} of {groceryList.items.length} items checked
-                                </Typography>
-                                <Divider sx={{ mb: 2 }} />
-                                <List disablePadding>
-                                    {groceryList.items.map((item, index) => {
-                                        const itemKey = `${item.name}-${index}`;
-                                        const isChecked = checkedItems.has(itemKey);
+                    {/* List */}
+                    <Paper sx={{ p: 3 }}>
+                        <List disablePadding>
+                            {groceryList.items.map((item, index) => {
+                                const key = `${item.name}-${item.unit}-${index}`;
+                                const checked = checkedItems.has(key);
 
-                                        return (
-                                            <ListItem
-                                                key={itemKey}
-                                                disablePadding
-                                                sx={{
-                                                    py: 1,
-                                                    borderBottom: index < groceryList.items.length - 1 ? '1px solid' : 'none',
-                                                    borderColor: 'divider',
-                                                    textDecoration: isChecked ? 'line-through' : 'none',
-                                                    opacity: isChecked ? 0.6 : 1,
-                                                    '@media print': {
-                                                        textDecoration: 'none',
-                                                        opacity: 1
-                                                    }
-                                                }}
-                                            >
-                                                <ListItemIcon sx={{ minWidth: 40, '@media print': { display: 'none' } }}>
-                                                    <Checkbox
-                                                        edge="start"
-                                                        checked={isChecked}
-                                                        onChange={() => handleToggleItem(itemKey)}
-                                                    />
-                                                </ListItemIcon>
-                                                <ListItemText
-                                                    primary={
-                                                        <Typography variant="body1">
-                                                            {item.name}
-                                                        </Typography>
-                                                    }
-                                                    secondary={
-                                                        <Typography variant="body2" color="text.secondary">
-                                                            {item.amount} {item.unit}
-                                                        </Typography>
-                                                    }
-                                                />
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            </>
-                        )}
+                                return (
+                                    <ListItem
+                                        key={key}
+                                        sx={{
+                                            textDecoration: checked ? 'line-through' : 'none',
+                                            opacity: checked ? 0.6 : 1
+                                        }}
+                                    >
+                                        <ListItemIcon>
+                                            <Checkbox
+                                                checked={checked}
+                                                onChange={() => handleToggleItem(key)}
+                                            />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                            primary={item.name}
+                                            secondary={`${item.amount} ${item.unit}`}
+                                        />
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
                     </Paper>
                 </>
-            ) : (
-                <Box sx={{ textAlign: 'center', py: 8 }}>
-                    <Typography variant="h6" color="text.secondary">
-                        No grocery list available
-                    </Typography>
-                </Box>
             )}
         </Container>
     );
