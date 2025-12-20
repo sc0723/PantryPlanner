@@ -111,10 +111,3 @@ The AI Agent isn't just a text generator. It is registered with Java Function Be
 
 ### 🛡️ Data Integrity
 The system enforces a **Save-Before-Schedule** architecture. This ensures that the recipe's visual metadata (Title, Image) is cached locally, preventing excessive and expensive external API calls when rendering the weekly planner grid.
-
----
-
-## 📝 Future Roadmap
-- **📸 Image Recognition**: Upload a photo of your fridge to have the AI Agent suggest recipes
-- **⚖️ Advanced Unit Conversion**: Converting grocery quantities (e.g., *"3 Cloves"* to *"1 Head of Garlic"*)
-- **👨‍👩‍👧‍👦 Multi-User Collaboration**: Shared meal plans for households
